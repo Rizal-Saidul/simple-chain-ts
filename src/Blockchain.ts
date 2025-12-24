@@ -2,8 +2,10 @@ import { Block } from "./Block.js";
 
 export class Blockchain {
   public chain: Block[];
+  public difficulty: number; // <-- 1. Setting Difficulty
   constructor() {
     this.chain = [this.createGenesisBlock()];
+    this.difficulty = 4;
   }
 
   // Block pertama dalam blockchain selalu dibuat manual (Genesis Block)
@@ -22,7 +24,10 @@ export class Blockchain {
 
   addBlock(newBlock: Block): void {
     newBlock.previousHash = this.getLatestBlock().hash; // link ke Block sebelumnya
-    newBlock.hash = newBlock.calculateHash();
+
+    // <-- 2. Sebelum push, kita harus mining dulu!
+    newBlock.mineBlock(this.difficulty);
+
     this.chain.push(newBlock);
   }
 
