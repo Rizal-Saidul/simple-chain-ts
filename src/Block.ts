@@ -1,41 +1,46 @@
-import CryptoJS from "crypto-js";
-import { Transaction } from "./Blockchain.js";
+import SHA256 from 'crypto-js/sha256';
+import { Transaction } from './Blockchain'; // Hapus .js di sini
 
 export class Block {
   public timestamp: string;
   public transactions: Transaction[];
   public previousHash: string;
   public hash: string;
-  public nonce: number; // <-- 1. Tambahan properti Non
+  public nonce: number;
 
-  constructor(
-    timestamp: string,
-    transaction: Transaction[],
-    previousHash: string = ""
-  ) {
+  constructor(timestamp: string, transactions: Transaction[], previousHash: string = '') {
     this.timestamp = timestamp;
-    this.transactions = transaction;
+    this.transactions = transactions; // Gunakan nama yang konsisten
     this.previousHash = previousHash;
-    this.nonce = 0; // <-- 1. Tambahan properti Non
+    this.nonce = 0;
     this.hash = this.calculateHash();
   }
 
   calculateHash(): string {
-    return CryptoJS.SHA256(
-        this.previousHash +
-        this.timestamp +
-        JSON.stringify(this.transactions) +
-        this.nonce
+    return SHA256(
+      this.previousHash + 
+      this.timestamp + 
+      JSON.stringify(this.transactions) + 
+      this.nonce
     ).toString();
   }
 
   mineBlock(difficulty: number): void {
-    while (
-      this.hash.substring(0, difficulty) !== Array(difficulty + 1).join("0")
-    ) {
-      this.nonce++; // Coba angka baru
-      this.hash = this.calculateHash(); // Hitung ulang hash
+    while (this.hash.substring(0, difficulty) !== Array(difficulty + 1).join("0")) {
+      this.nonce++;
+      this.hash = this.calculateHash();
     }
     console.log("Block mined: " + this.hash);
+  }
+
+  // --- WAJIB ADA UNTUK PHASE 3 ---
+  // Fungsi ini memvalidasi seluruh transaksi di dalam blok ini
+  hasValidTransactions(): boolean {
+    for (const tx of this.transactions) {
+      if (!tx.isValid()) {
+        return false;
+      }
+    }
+    return true;
   }
 }

@@ -1,19 +1,57 @@
-import { Blockchain, Transaction } from './Blockchain.js';
+import { Blockchain, Transaction } from './Blockchain'; // Hapus .js
+import elliptic from 'elliptic';
+const EC = elliptic.ec;
 
+// Inisialisasi Elliptic Curve (sama seperti Bitcoin)
+const ec = new EC('secp256k1');
+
+// --- LANGKAH 1: SETUP DOMPET UTAMA (USER) ---
+// Buka file 'keygenerator.ts' yang tadi Anda jalankan, 
+// salin PRIVATE KEY Anda dan tempel di bawah ini:
+const myKey = ec.keyFromPrivate('PASTE_PRIVATE_KEY_ANDA_DISINI'); 
+
+// Ambil alamat dompet (Public Key) dari Private Key tersebut
+const myWalletAddress = myKey.getPublic('hex');
+
+console.log('Dompet Saya:', myWalletAddress);
+
+// --- LANGKAH 2: MULAI BLOCKCHAIN ---
 const myCoin = new Blockchain();
 
-console.log('Membuat transaksi...');
-myCoin.createTransaction(new Transaction('Alamat-Budi', 'Alamat-Andi', 50));
-myCoin.createTransaction(new Transaction('Alamat-Andi', 'Alamat-Budi', 10));
+// --- LANGKAH 3: MEMBUAT & MENANDATANGANI TRANSAKSI ---
+// Anggap kita ingin kirim 10 koin ke Public Key orang lain
+const tx1 = new Transaction(myWalletAddress, 'Public-Key-Penerima-Bebas', 10);
 
-console.log('\nMemulai mining (Miner: Saidul)...');
-myCoin.minePendingTransactions('Alamat-Saidul');
+// Tanda tangani transaksi ini dengan Private Key kita!
+// Tanpa baris ini, transaksi akan ditolak oleh Blockchain.
+tx1.signTransaction(myKey);
 
-console.log('\nSaldo Saidul sekarang: ' + myCoin.getBalanceOfAddress('Alamat-Saidul'));
-// Output harusnya 0. Kenapa? Karena reward baru masuk "Pending" untuk blok berikutnya.
+// Masukkan ke Blockchain
+console.log('\nMenambahkan transaksi ke mempool...');
+myCoin.addTransaction(tx1);
 
-console.log('\nMemulai mining lagi (Miner: Saidul)...');
-myCoin.minePendingTransactions('Alamat-Saidul');
+// --- LANGKAH 4: MINING ---
+console.log('\nMemulai mining...');
+myCoin.minePendingTransactions(myWalletAddress);
 
-console.log('\nSaldo Saidul sekarang: ' + myCoin.getBalanceOfAddress('Alamat-Saidul'));
-// Output harusnya 100.
+// Cek Saldo (Harusnya 0, karena reward baru cair di blok berikutnya)
+console.log('\nSaldo saya adalah: ' + myCoin.getBalanceOfAddress(myWalletAddress));
+
+// Mining lagi agar reward sebelumnya cair
+console.log('\nMining blok kedua...');
+myCoin.minePendingTransactions(myWalletAddress);
+
+console.log('\nSaldo saya adalah: ' + myCoin.getBalanceOfAddress(myWalletAddress));
+
+// --- SKENARIO HACKER (OPSIONAL) ---
+// Uncomment kode di bawah untuk melihat sistem keamanan bekerja
+/*
+console.log('\n--- Percobaan Meretas ---');
+// Hacker mencoba mengubah jumlah koin dalam transaksi yang sudah valid
+myCoin.chain[1].transactions[0].amount = 1000;
+// Hacker mencoba menghitung ulang hash agar terlihat valid (tapi signature tetap invalid!)
+myCoin.chain[1].hash = myCoin.chain[1].calculateHash();
+
+console.log('Apakah chain valid? ' + myCoin.isChainValid()); 
+// Output harusnya FALSE
+*/
