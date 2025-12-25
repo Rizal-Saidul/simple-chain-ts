@@ -12,17 +12,17 @@ Berikut adalah rencana pengembangan untuk membuat simulasi ini mendekati cara ke
 
 ### 🚧 Phase 2: Consensus Mechanism (Next Step)
 
-- [ ] Implement **Proof of Work (Mining)**.
+- [x] Implement **Proof of Work (Mining)**.
   - Menambahkan `nonce` pada Block.
   - Membuat loop `mining` hingga menemukan hash yang diawali dengan '0000'.
-- [ ] Menambahkan mekanisme _Difficulty adjustment_.
+- [x] Menambahkan mekanisme _Difficulty adjustment_.
 
 ### 🔮 Phase 3: Transactions & Wallets
 
-- [ ] Create `Transaction` class (From, To, Amount).
-- [ ] Implement KeyPair generation (Public/Private Key) menggunakan Elliptic Curve.
-- [ ] Implement Digital Signature (Signing transactions).
-- [ ] Validasi signature sebelum transaksi dimasukkan ke Block.
+- [x] Create `Transaction` class (From, To, Amount).
+- [x] Implement KeyPair generation (Public/Private Key) menggunakan Elliptic Curve.
+- [x] Implement Digital Signature (Signing transactions).
+- [x] Validasi signature sebelum transaksi dimasukkan ke Block.
 
 ### 🌐 Phase 4: Network (Advanced)
 

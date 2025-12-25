@@ -1,22 +1,20 @@
 import CryptoJS from "crypto-js";
+import { Transaction } from "./Blockchain.js";
 
 export class Block {
-  public index: number;
   public timestamp: string;
-  public data: any;
+  public transactions: Transaction[];
   public previousHash: string;
   public hash: string;
   public nonce: number; // <-- 1. Tambahan properti Non
 
   constructor(
-    index: number,
     timestamp: string,
-    data: any,
+    transaction: Transaction[],
     previousHash: string = ""
   ) {
-    this.index = index;
     this.timestamp = timestamp;
-    this.data = data;
+    this.transactions = transaction;
     this.previousHash = previousHash;
     this.nonce = 0; // <-- 1. Tambahan properti Non
     this.hash = this.calculateHash();
@@ -24,11 +22,10 @@ export class Block {
 
   calculateHash(): string {
     return CryptoJS.SHA256(
-      this.index +
         this.previousHash +
         this.timestamp +
-        JSON.stringify(this.data) +
-        this.nonce // <-- 3. Nonce harus ikut di-hash
+        JSON.stringify(this.transactions) +
+        this.nonce
     ).toString();
   }
 
