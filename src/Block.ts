@@ -1,5 +1,5 @@
-import SHA256 from 'crypto-js/sha256';
-import { Transaction } from './Blockchain'; // Hapus .js di sini
+import SHA256 from "crypto-js/sha256";
+import { Transaction } from "./Blockchain";
 
 export class Block {
   public timestamp: string;
@@ -8,9 +8,13 @@ export class Block {
   public hash: string;
   public nonce: number;
 
-  constructor(timestamp: string, transactions: Transaction[], previousHash: string = '') {
+  constructor(
+    timestamp: string,
+    transactions: Transaction[],
+    previousHash: string = ""
+  ) {
     this.timestamp = timestamp;
-    this.transactions = transactions; // Gunakan nama yang konsisten
+    this.transactions = transactions;
     this.previousHash = previousHash;
     this.nonce = 0;
     this.hash = this.calculateHash();
@@ -18,23 +22,23 @@ export class Block {
 
   calculateHash(): string {
     return SHA256(
-      this.previousHash + 
-      this.timestamp + 
-      JSON.stringify(this.transactions) + 
-      this.nonce
+      this.previousHash +
+        this.timestamp +
+        JSON.stringify(this.transactions) +
+        this.nonce
     ).toString();
   }
 
   mineBlock(difficulty: number): void {
-    while (this.hash.substring(0, difficulty) !== Array(difficulty + 1).join("0")) {
+    while (
+      this.hash.substring(0, difficulty) !== Array(difficulty + 1).join("0")
+    ) {
       this.nonce++;
       this.hash = this.calculateHash();
     }
     console.log("Block mined: " + this.hash);
   }
 
-  // --- WAJIB ADA UNTUK PHASE 3 ---
-  // Fungsi ini memvalidasi seluruh transaksi di dalam blok ini
   hasValidTransactions(): boolean {
     for (const tx of this.transactions) {
       if (!tx.isValid()) {
