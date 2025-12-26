@@ -1,9 +1,8 @@
-import { Block } from "./Block";
-import SHA256 from "crypto-js/sha256";
+import { Block } from "./Block.js";
+import CryptoJS from "crypto-js";
+// @ts-ignore
 import elliptic from "elliptic";
-const EC = elliptic.ec;
-
-const ec = new EC("secp256k1");
+const ec = new elliptic.ec("secp256k1");
 
 export class Transaction {
   public fromAddress: string | null;
@@ -18,9 +17,9 @@ export class Transaction {
   }
 
   calculateHash(): string {
-    return SHA256(this.fromAddress + this.toAddress + this.amount).toString();
+    return CryptoJS.SHA256(this.fromAddress + this.toAddress + this.amount).toString();
   }
-  signTransaction(signingKey: EC.KeyPair): void {
+  signTransaction(signingKey: any): void {
     if (signingKey.getPublic("hex") !== this.fromAddress) {
       throw new Error(
         "Anda tidak bisa menandatangani transaksi untuk dompet orang lain!"
@@ -56,12 +55,14 @@ export class Blockchain {
     this.miningReward = 100;
   }
 
-  private createGenesisBlock(): Block {
+  public createGenesisBlock(): Block {
     return new Block("22/12/2025", [], "0");
   }
 
   getLatestBlock(): Block {
-    return this.chain[this.chain.length - 1];
+    const lastBlock = this.chain[this.chain.length - 1];
+    if (!lastBlock) throw new Error("Chain is empty");
+    return lastBlock;
   }
 
   minePendingTransactions(miningRewardAddress: string): void {
@@ -84,6 +85,7 @@ export class Blockchain {
 
     this.pendingTransactions = [];
   }
+
   addTransaction(transaction: Transaction): void {
     if (!transaction.fromAddress || !transaction.toAddress) {
       throw new Error("Transaksi harus memiliki alamat pengirim dan penerima");
@@ -112,10 +114,16 @@ export class Blockchain {
 
     return balance;
   }
+
   isChainValid(): boolean {
     for (let i = 1; i < this.chain.length; i++) {
       const currentBlock = this.chain[i];
       const previousBlock = this.chain[i - 1];
+      
+      if (!currentBlock || !previousBlock) {
+        return false;
+      }
+      
       if (!currentBlock.hasValidTransactions()) {
         return false;
       }
@@ -125,6 +133,85 @@ export class Blockchain {
       }
 
       if (currentBlock.previousHash !== previousBlock.hash) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // mengganti rantai saat ini dengan rantai baru jika rantai baru lebih panjang dan valid
+  replaceChain(newChain: Block[]): void {
+    if (newChain.length <= this.chain.length) {
+      console.log("Rantai baru tidak lebih panjang dari rantai saat ini");
+      return;
+    }
+
+    if (!this.isValidChain(newChain)) {
+      console.log("rantai baru tidak valid");
+      return;
+    }
+
+    console.log(
+      "Rantai saat ini diganti dengan rantai baru yang lebih panjang"
+    );
+    this.chain = newChain;
+  }
+
+  //  Helper statis unutk mengecek validitas rantai asing
+  isValidChain(chainToValidate: Block[]): boolean {
+    const realGenesis = JSON.stringify(this.createGenesisBlock());
+    // cek geneis block
+    if (chainToValidate.length === 0) {
+      return false;
+    }
+    
+    if (JSON.stringify(chainToValidate[0]) !== realGenesis) {
+      if (chainToValidate[0]?.previousHash !== "0") return false;
+    }
+
+    // cek sisa rantai
+    for (let i = 1; i < chainToValidate.length; i++) {
+      const currentBlockData = chainToValidate[i];
+      const previousBlockData = chainToValidate[i - 1];
+
+      if (!currentBlockData || !previousBlockData) {
+        return false;
+      }
+
+      const reconstructedTx = currentBlockData.transactions.map(
+        (txData: any) => {
+          const tx = new Transaction(
+            txData.fromAddress,
+            txData.toAddress,
+            txData.amount
+          );
+          tx.signature = txData.signature; // Kembalikan signature asli
+          return tx;
+        }
+      );
+
+      const currentBlock = new Block(
+        currentBlockData.timestamp,
+        reconstructedTx,
+        currentBlockData.previousHash
+      );
+      currentBlock.nonce = currentBlockData.nonce;
+      currentBlock.hash = currentBlockData.hash;
+
+      if (!currentBlock.hasValidTransactions()) {
+        console.log("Chain invalid: Transaksi korup ditemukan.");
+        return false;
+      }
+
+      // Cek apakah data blok diubah? (Hash tidak cocok)
+      if (currentBlock.hash !== currentBlock.calculateHash()) {
+        console.log("Chain invalid: Hash blok tidak cocok.");
+        return false;
+      }
+
+      // Cek apakah rantai putus?
+      if (currentBlock.previousHash !== previousBlockData.hash) {
+        console.log("Chain invalid: Rantai terputus.");
         return false;
       }
     }

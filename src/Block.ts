@@ -1,5 +1,5 @@
-import SHA256 from "crypto-js/sha256";
-import { Transaction } from "./Blockchain";
+import CryptoJS from "crypto-js";
+import { Transaction } from "./Blockchain.js";
 
 export class Block {
   public timestamp: string;
@@ -21,7 +21,7 @@ export class Block {
   }
 
   calculateHash(): string {
-    return SHA256(
+    return CryptoJS.SHA256(
       this.previousHash +
         this.timestamp +
         JSON.stringify(this.transactions) +

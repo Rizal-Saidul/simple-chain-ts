@@ -1,4 +1,5 @@
-import { Blockchain, Transaction } from "./Blockchain";
+import { Blockchain, Transaction } from "./Blockchain.js";
+// @ts-ignore
 import elliptic from "elliptic";
 const EC = elliptic.ec;
 
